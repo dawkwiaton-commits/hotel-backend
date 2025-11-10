@@ -1,52 +1,50 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import fetch from 'node-fetch'; // jeśli Node 18+, możesz użyć wbudowanego fetch
-
-import { SendEmailDto } from 'src/dto/send-email.dto';
+import { MailerSend, EmailParams, Sender, Recipient } from 'mailersend';
 
 @Injectable()
 export class EmailService {
-  private apiKey = process.env.BREVO_API_KEY!;
-  private senderEmail = process.env.BREVO_SENDER_EMAIL!;
-  private targetEmail = process.env.TARGET_EMAIL!;
+  private mailerSend: MailerSend;
 
-  async sendReservationMail(dto: SendEmailDto) {
-    const body = {
-      sender: { email: this.senderEmail, name: 'Strona Rezerwacji' },
-      to: [{ email: this.targetEmail, name: 'Strona Rezerwacji' }],
-      subject: 'Nowa rezerwacja ze strony',
-      htmlContent: `
-        <h2>Nowa rezerwacja</h2>
-        <p><strong>Imię i nazwisko:</strong> ${dto.name}</p>
-        <p><strong>Email:</strong> ${dto.email}</p>
-        <p><strong>Telefon:</strong> ${dto.phone}</p>
-        <p><strong>Od:</strong> ${dto.dateFrom}</p>
-        <p><strong>Do:</strong> ${dto.dateTo}</p>
-        <p><strong>Wiadomość:</strong><br/>${dto.message || '-'}</p>
-      `,
-    };
+  constructor() {
+    this.mailerSend = new MailerSend({
+      apiKey: process.env.MAILERSEND_API_KEY!,
+    });
+  }
+
+  async sendReservationMail(dto: {
+    name: string;
+    email: string;
+    phone: string;
+    dateFrom: string;
+    dateTo: string;
+    message?: string;
+  }) {
+    const sender = new Sender(process.env.MAILERSEND_FROM_EMAIL!, 'Strona Rezerwacji');
+    const recipient = new Recipient(process.env.TARGET_EMAIL!, 'Odbiorca');
+
+    const html = `
+      <h2>Nowa rezerwacja</h2>
+      <p><strong>Imię i nazwisko:</strong> ${dto.name}</p>
+      <p><strong>Email:</strong> ${dto.email}</p>
+      <p><strong>Telefon:</strong> ${dto.phone}</p>
+      <p><strong>Od:</strong> ${dto.dateFrom}</p>
+      <p><strong>Do:</strong> ${dto.dateTo}</p>
+      <p><strong>Wiadomość:</strong><br/>${dto.message || '-'}</p>
+    `;
+
+    const emailParams = new EmailParams()
+      .setFrom(sender)
+      .setTo([recipient])
+      .setSubject('Nowa rezerwacja ze strony')
+      .setHtml(html)
+      .setText(`Nowa rezerwacja od ${dto.name}`);
 
     try {
-      const res = await fetch('https://api.sendinblue.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': this.apiKey,
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        console.error('Brevo API error:', text);
-        throw new InternalServerErrorException('Nie udało się wysłać maila');
-      }
-
-      const data = await res.json();
-      console.log('Email sent via Brevo API:', data);
+      const response = await this.mailerSend.email.send(emailParams);
+      console.log('Email wysłany przez MailerSend:', response);
       return { success: true };
-    } catch (err) {
-      console.error('Brevo API request failed', err);
+    } catch (error) {
+      console.error('MailerSend wysyłka nie powiodła się', error);
       throw new InternalServerErrorException('Nie udało się wysłać maila');
     }
   }
