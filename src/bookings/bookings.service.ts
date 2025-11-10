@@ -15,14 +15,16 @@ export class BookingsService {
       where: { status: 'confirmed' }, // uwzględniamy wszystkie źródła, np. 'web'
     });
 
-    bookings.forEach(b => {
+    bookings.forEach((b) => {
       // Poprawiamy endDate: dodajemy 1 dzień
+      const startDate = new Date(b.startDate);
       const endDate = new Date(b.endDate);
+
       endDate.setDate(endDate.getDate() + 1);
 
       cal.createEvent({
-        start: new Date(b.startDate + 'T00:00:00'),
-        end: new Date(b.endDate + 'T00:00:00'),
+        start: startDate,
+        end: endDate,
         summary: `Zajęte - pokój ${b.roomId}`,
         description: b.guestName ? `Gość: ${b.guestName}` : undefined,
       });
