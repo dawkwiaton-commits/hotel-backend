@@ -19,7 +19,10 @@ export class EmailService {
     dateTo: string;
     message?: string;
   }) {
-    const sender = new Sender(process.env.MAILERSEND_FROM_EMAIL!, 'Strona Rezerwacji');
+    const sender = new Sender(
+      'test-r83ql3pq1dzgzw1j@mlsender.net', 
+      'Strona Rezerwacji'
+    );
     const recipient = new Recipient(process.env.TARGET_EMAIL!, 'Odbiorca');
 
     const html = `
