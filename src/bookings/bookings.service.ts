@@ -10,7 +10,7 @@ export class BookingsService {
     const cal = ical({ name: 'Hotel Bookings' });
 
     const bookings = await prisma.booking.findMany({
-      where: { source: 'local', status: 'confirmed' },
+      where: { status: 'confirmed' }, // usuń filtr source jeśli masz 'web'
     });
 
     bookings.forEach(b => {
