@@ -22,6 +22,7 @@ export class EmailController {
     // 2. Remove captcha before sending email
     const { captcha, ...emailData } = dto;
 
+    console.log("C", captcha)
     // 3. Send email
     return this.emailService.sendReservationMail(emailData);
   }

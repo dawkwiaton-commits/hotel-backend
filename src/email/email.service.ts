@@ -35,6 +35,18 @@ export class EmailService {
       <p><strong>Wiadomość:</strong><br/>${data.message || '-'}</p>
     `;
 
+    this.transporter.verify((error, success) => {
+      if (error) {
+        console.error('SMTP connection error:', error);
+      } else {
+        console.log('SMTP ready:', success);
+      }
+    });
+
+    console.log("GMAIL U", process.env.GMAIL_USER)
+
+    console.log("GMAIL P", process.env.GMAIL_PASS)
+
     try {
       const info = await this.transporter.sendMail({
         from: `"Strona Rezerwacji" <${process.env.GMAIL_USER}>`,
