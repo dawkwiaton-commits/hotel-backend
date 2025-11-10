@@ -23,4 +23,8 @@ export class SendEmailDto {
   @IsOptional()
   @IsString()
   message?: string;
+  
+  @IsString()
+  @IsNotEmpty()
+  captcha: string;
 }
