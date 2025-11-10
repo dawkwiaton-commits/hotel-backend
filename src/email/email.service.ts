@@ -1,52 +1,42 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import * as SibApiV3Sdk from 'sib-api-v3-sdk';
+import { SendEmailDto } from 'src/dto/send-email.dto';
 
 @Injectable()
 export class EmailService {
-  private transporter;
+  private apiInstance: SibApiV3Sdk.TransactionalEmailsApi;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: false, // TLS w Brevo na 587 nie wymaga secure
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    const defaultClient = SibApiV3Sdk.ApiClient.instance;
+    const apiKey = defaultClient.authentications['api-key'];
+    apiKey.apiKey = process.env.BREVO_API_KEY;
+
+    this.apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
   }
 
-  async sendReservationMail(data: {
-    name: string;
-    email: string;
-    phone: string;
-    dateFrom: string;
-    dateTo: string;
-    message?: string;
-  }) {
+  async sendReservationMail(dto: SendEmailDto) {
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+
+    sendSmtpEmail.to = [{ email: process.env.TARGET_EMAIL! }];
+    sendSmtpEmail.sender = { email: process.env.BREVO_SENDER_EMAIL!, name: 'Strona Rezerwacji' };
+    sendSmtpEmail.subject = 'Nowa rezerwacja ze strony';
+    sendSmtpEmail.htmlContent = `
+      <h2>Nowa rezerwacja</h2>
+      <p><strong>Imię i nazwisko:</strong> ${dto.name}</p>
+      <p><strong>Email:</strong> ${dto.email}</p>
+      <p><strong>Telefon:</strong> ${dto.phone}</p>
+      <p><strong>Od:</strong> ${dto.dateFrom}</p>
+      <p><strong>Do:</strong> ${dto.dateTo}</p>
+      <p><strong>Wiadomość:</strong><br/>${dto.message || '-'}</p>
+    `;
+
     try {
-      const html = `
-        <h2>Nowa rezerwacja</h2>
-        <p><strong>Imię i nazwisko:</strong> ${data.name}</p>
-        <p><strong>Email:</strong> ${data.email}</p>
-        <p><strong>Telefon:</strong> ${data.phone}</p>
-        <p><strong>Od:</strong> ${data.dateFrom}</p>
-        <p><strong>Do:</strong> ${data.dateTo}</p>
-        <p><strong>Wiadomość:</strong><br/>${data.message || '-'}</p>
-      `;
-
-      await this.transporter.sendMail({
-        from: `"Strona Rezerwacji" <${process.env.SMTP_USER}>`,
-        to: process.env.TARGET_EMAIL,
-        subject: 'Nowa rezerwacja ze strony',
-        html,
-      });
-
+      const response = await this.apiInstance.sendTransacEmail(sendSmtpEmail);
+      console.log('Email sent via Brevo API:', response);
       return { success: true };
     } catch (error) {
-      console.error('Email sending failed', error);
-      throw new InternalServerErrorException('Cannot send email');
+      console.error('Brevo API email sending failed', error);
+      throw new InternalServerErrorException('Cannot send email via Brevo API');
     }
   }
 }
