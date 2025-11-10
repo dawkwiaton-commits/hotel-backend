@@ -15,20 +15,21 @@ export class BookingsService {
       where: { status: 'confirmed' }, // uwzględniamy wszystkie źródła, np. 'web'
     });
 
-    bookings.forEach((b) => {
-      // Poprawiamy endDate: dodajemy 1 dzień
-      const startDate = new Date(b.startDate);
-      const endDate = new Date(b.endDate);
-
-      endDate.setDate(endDate.getDate() + 1);
-
+    bookings.forEach(b => {
+      const startDate = new Date(b.startDate)
+      startDate.setHours(0, 0, 0, 0)
+    
+      const endDate = new Date(b.endDate)
+      endDate.setHours(0, 0, 0, 0)
+      endDate.setDate(endDate.getDate() + 1) // DTEND = dzień po ostatnim
+    
       cal.createEvent({
         start: startDate,
         end: endDate,
         summary: `Zajęte - pokój ${b.roomId}`,
         description: b.guestName ? `Gość: ${b.guestName}` : undefined,
-      });
-    });
+      })
+    })
 
     return cal.toString();
   }
