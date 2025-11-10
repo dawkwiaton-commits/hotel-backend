@@ -1,27 +1,32 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class SendEmailDto {
+  @ApiProperty({ minLength: 3 })
   @IsString()
-  @IsNotEmpty()
+  @MinLength(3)
   name: string;
 
+  @ApiProperty()
   @IsEmail()
   email: string;
 
+  @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  @Matches(/^[0-9+\s-]+$/)
   phone: string;
 
+  @ApiProperty({ type: String, format: 'date' })
   @IsString()
-  @IsNotEmpty()
   dateFrom: string;
 
+  @ApiProperty({ type: String, format: 'date' })
   @IsString()
-  @IsNotEmpty()
   dateTo: string;
 
+  @ApiProperty({ required: false, maxLength: 500 })
   @IsOptional()
-  @IsString()
+  @MaxLength(500)
   message?: string;
   
   @IsString()
