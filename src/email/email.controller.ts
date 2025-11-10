@@ -1,6 +1,5 @@
 import { Body, Controller, Post, BadRequestException } from '@nestjs/common';
 import { EmailService } from './email.service';
-import { SendEmailDto } from 'src/dto/send-email.dto';
 
 @Controller('email')
 export class EmailController {
@@ -20,7 +19,7 @@ export class EmailController {
       throw new BadRequestException('Captcha validation failed');
     }
 
-    // 2. Remove captcha before passing to service
+    // 2. Remove captcha before sending email
     const { captcha, ...emailData } = dto;
 
     // 3. Send email

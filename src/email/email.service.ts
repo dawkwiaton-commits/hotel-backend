@@ -1,4 +1,3 @@
-// email.service.ts
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 
@@ -12,8 +11,8 @@ export class EmailService {
       port: 465,
       secure: true, // SSL
       auth: {
-        user: 'dawidkwiaton123@gmail.com', // Twój Gmail
-        pass: 'snjiqqasrvvduert',   // App Password wygenerowane w Gmail
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS,
       },
     });
   }
@@ -38,8 +37,8 @@ export class EmailService {
 
     try {
       const info = await this.transporter.sendMail({
-        from: '"Strona Rezerwacji" <dawidkwiaton123@gmail.com>', // Twój Gmail
-        to: data.email, // Kto ma dostać maila
+        from: `"Strona Rezerwacji" <${process.env.GMAIL_USER}>`,
+        to: data.email, // tutaj możesz też użyć stałego adresu np. TARGET_EMAIL
         subject: 'Nowa rezerwacja ze strony',
         html,
       });
