@@ -20,7 +20,7 @@ export class EmailService {
     message?: string;
   }) {
     const sender = new Sender(
-      'test-r83ql3pq1dzgzw1j@mlsender.net', 
+      'MS_tzwct7@test-r83ql3pq1dzgzw1j.mlsender.net', 
       'Strona Rezerwacji'
     );
     const recipient = new Recipient(process.env.TARGET_EMAIL!, 'Odbiorca');
